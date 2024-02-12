@@ -1,0 +1,121 @@
+/*
+ * TCSS 305 – Winter 2015
+ * Assignment 5 - Tetris
+ */
+
+package view;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JPanel;
+
+import model.Point;
+import model.TetrisPiece;
+
+/**
+ * Represents a TetrisPieceObserver class.
+ * @author Lola Howell
+ * @version March 9, 2015
+ */
+
+@SuppressWarnings("serial")
+public class PreviewPanel extends JPanel implements Observer {
+
+    /**
+     * The panel size.
+     */
+    private static final Dimension PANEL_SIZE = new Dimension(75, 75);
+
+    /**
+     * The color Pink.
+     */
+    private static final Color PINK = new Color(255, 175, 255);
+
+    /**
+     * The size of the block.
+     */
+    private static final int SIZE = 15;
+    /**
+     * The x point difference.
+     */
+    private static final int X_CHANGE = 10;
+
+    /**
+     * The y point difference.
+     */
+    private static final int Y_CHANGE = 50;
+
+    /**
+     * The 4 Points of the TetrisPiece.
+     */
+    private Point[] myPoints;
+
+
+    /**
+     * The TetrisPiece.
+     */
+    private TetrisPiece myPiece;
+
+    /**
+     * Constructor for TetrisPieceObserver object.
+     */
+    public PreviewPanel() {
+        super();
+        setBackground(PINK);
+        setPreferredSize(PANEL_SIZE);
+        myPiece = null;
+        myPoints = null;
+    }
+
+    /**
+     * Returns the status of the piece,
+     * false if it's null, true if it not.
+     * 
+     * @return Boolean status of the piece.
+     */
+    public Boolean getStatusPiece() {
+        return myPiece != null;
+    }
+
+    /**
+     * Draws the preview of the Tetris piece.
+     * 
+     * @param theGraphic The graphics context to use for painting.
+     */
+    public void paintComponent(final Graphics theGraphic) {
+        super.paintComponent(theGraphic);
+        final Graphics2D g2d = (Graphics2D) theGraphic;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, 
+                             RenderingHints.VALUE_ANTIALIAS_ON);
+        if (myPiece != null) {
+            final Color color = myPiece.getColor();
+            for (int col = 0; col < myPoints.length; col++) {
+                if (myPoints[col] != null) {
+                    g2d.setColor(color);
+                    g2d.fillRect((myPoints[col].x() * SIZE) + X_CHANGE, 
+                                 Y_CHANGE - (myPoints[col].y() * SIZE), SIZE, SIZE);
+                }
+            }
+        }
+    }
+
+    /**
+     * The update method for the Observer interface.
+     * 
+     * @param theBoard The observable, Board.
+     * @param thePiece Board passes.
+     */
+    public void update(final Observable theBoard, final Object thePiece) {
+        if (thePiece instanceof TetrisPiece) {
+            myPoints = ((TetrisPiece) thePiece).getPoints();
+            myPiece = (TetrisPiece) thePiece;
+            repaint(); 
+        }
+    }
+}

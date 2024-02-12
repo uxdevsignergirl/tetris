@@ -1,0 +1,36 @@
+/*
+ * TCSS 305 – Winter 2015
+ * Assignment 5 - Tetris
+ */
+package gui;
+
+import java.awt.EventQueue;
+
+/**
+ * Represents the main driver class.
+ * @author Lola Howell
+ * @version March 9, 2015
+ */
+public final class GUIMain {
+
+    /**
+     * Private constructor to inhibit instantiation.
+     */
+    private GUIMain() {
+        throw new IllegalStateException();
+    }
+
+    /**
+     * Start point for the program.
+     * 
+     * @param theArgs command line arguments - ignored.
+     */
+    public static void main(final String... theArgs) {
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new TetrisGUI().start();
+            }
+        });
+    }
+}

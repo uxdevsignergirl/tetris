@@ -1,0 +1,166 @@
+/*
+ * TCSS 305 – Winter 2015
+ * Assignment 5 - Tetris
+ */
+
+package view;
+
+import gui.TetrisGUI;
+
+import java.util.Observable;
+import java.util.Observer;
+
+import model.Board;
+import model.Board.CompletedLines;
+
+/**
+ * Represents a Game class.
+ * @author Lola Howell
+ * @version March 9, 2015
+ */
+
+public class Game implements Observer {
+
+    /** 
+     * The reduce delay (in milliseconds) for the move timer. 
+     */
+    private static final int REDUCE_DELAY = 100;
+
+    /** 
+     * The number of points needed for the level to increase. 
+     */
+    private static final int POINTS = 50;
+
+    /** 
+     * The number of Points given. 
+     */
+    private static final int AWARD_POINTS = 10;
+
+    /**
+     * The Tetris Board.
+     */
+    private Board myBoard;
+
+    /**
+     * The number of lines.
+     */
+    private int myLines;
+
+    /**
+     * The score.
+     */
+    private int myScore;
+
+    /**
+     * The level.
+     */
+    private int myLevel;
+
+    /**
+     * The TetrisGUI.
+     */
+    private TetrisGUI myGui;
+
+    /**
+     * The high score.
+     */
+    private int myHighScore;
+
+    /**
+     * Constructor for Game object.
+     * 
+     * @param theBoard observable Board.
+     * @param theGui the TetrisGUI.
+     */
+    public Game(final Board theBoard, final TetrisGUI theGui) {
+        super();
+        myBoard = theBoard;
+        myBoard  = theBoard;
+        myLines = 0;
+        myLevel = 1;
+        myScore = 0; 
+        myGui = theGui;
+        myHighScore = 0;
+    }
+
+    /**
+     * Counts lines cleared, calculates the score,
+     * resets high score, resets labels in TetrisGUI.
+     * 
+     * @param theLnes the number of lines cleared.
+     */
+    public void resetStats(final int theLnes) {
+        myLines += theLnes;
+        myScore += Math.pow(theLnes, 2) * AWARD_POINTS;
+        final int nextLevel = myScore / POINTS;
+        if (nextLevel >= 1) {
+            myLevel = nextLevel + 1;
+            myGui.setDelay(REDUCE_DELAY);
+        }
+        if (myScore > myHighScore) {
+            myHighScore = myScore;
+        }
+        myGui.resetLabels();
+    }
+
+    /**
+     * Starts the game, resets all the stats.
+     */
+    public void startGame() {
+        myBoard.clear();
+        myLines = 0;
+        myScore = 0;
+        myLevel = 1;
+        myGui.resetLabels();
+    }
+
+    /**
+     * Returns the level.
+     * 
+     * @return the level.
+     */
+    public int getLevel() {
+        return myLevel;
+    }
+
+    /**
+     * Returns the number of lines.
+     * 
+     * @return the number of Lines cleared.
+     */
+    public int getLines() {
+        return myLines;
+    }
+
+    /**
+     * Returns the current Score.
+     * 
+     * @return the current Score.
+     */
+    public int getScore() {
+        return myScore;
+    }
+
+    /**
+     * Returns High Score achieved.
+     * 
+     * @return the High Score.
+     */
+    public int getHighScore() {
+        return myHighScore;
+    }
+
+    /**
+     * The update method for the Observer interface.
+     * 
+     * @param theBoard The observable, Board.
+     * @param theLines CompletedLines Board passes.
+     */
+    public void update(final Observable theBoard, final Object theLines) {
+        if (theLines instanceof CompletedLines) {
+            final int lines = (((CompletedLines) theLines).getCompletedLines()).size();
+            resetStats(lines);
+        }
+    }
+}
+

@@ -1,0 +1,495 @@
+/*
+ * TCSS 305 – Winter 2015
+ * Assignment 5 - Tetris
+ */
+
+package gui;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+import javax.swing.UIManager;
+
+import model.Board;
+import model.Board.GameStatus;
+import view.BoardPanel;
+import view.Game;
+import view.PreviewPanel;
+
+/**
+ * Represents a TetrisGUI class.
+ * @author Lola Howell
+ * @version March 9, 2015
+ */
+
+@SuppressWarnings("serial")
+public class TetrisGUI extends JFrame implements Observer {
+
+    /**
+     * The color Pink.
+     */
+    private static final Color PINK = new Color(255, 175, 255);
+
+    /** 
+     * A size for the frame. 
+     */
+    private static final Dimension SIZE = new Dimension(251, 388);
+
+    /** 
+     * A size for the inner panel. 
+     */
+    private static final Dimension INNER_PANEL = new Dimension(75, 90);
+    /** 
+     * The default space between components. 
+     */
+    private static final int PADDING = 20;
+
+    /** 
+     * The initial delay (in milliseconds) for the move timer. 
+     */
+    private static final int START_DELAY = 1000;
+
+    /**
+     * The Tetris Board.
+     */
+    private final Board myBoard;
+
+    /**
+     * The timer.
+     */
+    private Timer myTimer; 
+
+    /**
+     * The status of the GameOver.
+     */
+    private  Boolean myGameOver;
+
+    /**
+     * The score label.
+     */
+    private JLabel myScoreLabel;
+
+    /**
+     * The lines label.
+     */
+    private JLabel myLinesLabel;
+
+    /**
+     * The level label.
+     */
+    private JLabel myLevelLabel;
+
+     /**
+     * The status of the Pause Button.
+     */
+    private Boolean myPaused;
+
+    /**
+     * The status of the Start Button.
+     */
+    private Boolean myStartGame;
+
+    /**
+     * The Pause Button.
+     */
+    private JButton myButtonPause;
+
+    /**
+     * The Help Button.
+     */
+    private JButton myButtonHelp;
+
+    /**
+     * The Start Button.
+     */
+    private JButton myButtonStart;
+
+    /**
+     * The delay.
+     */
+    private int myDelay;
+
+    /**
+     * The Game.
+     */
+    private Game myGame;
+    
+    /**
+     * The Game.
+     */
+    private JLabel myHighScore;
+    
+    /**
+     * The Grid state.
+     */
+    private Boolean myGridOn;
+    
+    /**
+     * The Grid Button.
+     */
+    private JButton myGrid;
+    
+    /**
+     * The Board Panel.
+     */
+    private BoardPanel myBoardDataObserver;
+    
+    /**
+     * Constructor for TetrisGUI object.
+     */
+    public TetrisGUI() {
+        super("Tetris");
+        setPreferredSize(SIZE);
+        myDelay = START_DELAY;
+        myTimer = new Timer(myDelay, new TimerAction());
+        myBoard = new Board();
+        myGame = new Game(myBoard, this);
+        myScoreLabel = new JLabel("Score: 0");
+        myLinesLabel = new JLabel("Lines: 0");
+        myLevelLabel = new JLabel("Level: 1");
+        myHighScore = new JLabel("Best: 0");
+        myButtonStart = new JButton("NEW GAME"); 
+        myButtonPause = new JButton("PAUSE"); 
+        myButtonHelp = new JButton("HELP");
+        myGrid = new JButton("GRID ON");
+        myBoardDataObserver = new BoardPanel(myBoard);
+        myGameOver = false;
+        myPaused = false;
+        myStartGame = false;
+        myGridOn = false;
+    }
+
+    /**
+     * Sets the title and the icon of the frame, attempts to 
+     * center the frame on the screen, calls
+     * other methods for creation of panels. Displays the GUI.
+     */
+    public void start() {
+        setIconImage(new ImageIcon("Icons/Game.png").getImage());
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setResizable(false);
+        setLocationRelativeTo(null);
+        setFocusable(true);
+        addKeyListener(new MyKeyAdapter());
+        final PreviewPanel tetrisPieceObserver = new PreviewPanel();
+        setupObservers(tetrisPieceObserver);
+        setupEast(tetrisPieceObserver);
+        setupCenter(myBoardDataObserver);
+        setupSouth();
+        pack();
+        setVisible(true);
+    }
+
+    /**
+     * Sets up the observers.
+     * 
+     * @param thePreview is the PreviewPanel.
+     */
+    private void setupObservers(final PreviewPanel thePreview) {
+        myBoard.addObserver(myBoardDataObserver);
+        myBoard.addObserver(thePreview);
+        myBoard.addObserver(myGame);
+        myBoard.addObserver(this);
+    }
+
+    /**
+     * Sets up the JPanel for the EAST region.
+     * 
+     * @param thePreview is the PreviewPanel.
+     */
+    private void setupEast(final PreviewPanel thePreview) {
+        final JPanel eastPanel = new JPanel();
+        eastPanel.setBackground(Color.MAGENTA);
+        final JPanel innerPanel2 = new JPanel();
+        innerPanel2.setBackground(PINK);
+        innerPanel2.setPreferredSize(INNER_PANEL);
+        myGrid.setMnemonic(KeyEvent.VK_G);
+        myGrid.setBackground(PINK);
+        myGrid.setEnabled(false);
+        myGrid.addActionListener(new ActionButtonListener());
+        innerPanel2.add(myLevelLabel);
+        innerPanel2.add(myLinesLabel);
+        innerPanel2.add(myScoreLabel);
+        innerPanel2.add(myHighScore);
+        myLevelLabel.setAlignmentX(CENTER_ALIGNMENT);
+        myLinesLabel.setAlignmentX(CENTER_ALIGNMENT);
+        myScoreLabel.setAlignmentX(CENTER_ALIGNMENT);
+        myHighScore.setAlignmentX(CENTER_ALIGNMENT);
+        final Box eastBox = new Box(BoxLayout.PAGE_AXIS);
+        eastBox.add(thePreview);
+        eastBox.add(Box.createVerticalStrut(PADDING));
+        eastBox.add(innerPanel2);
+        eastBox.add(Box.createVerticalStrut(PADDING));
+        eastBox.add(myGrid);
+        eastBox.add(Box.createVerticalStrut(PADDING));
+        myButtonHelp.setAlignmentX(CENTER_ALIGNMENT);
+        myGrid.setAlignmentX(CENTER_ALIGNMENT);
+        eastBox.add(myButtonHelp);
+        eastPanel.add(eastBox);
+        add(eastPanel, BorderLayout.EAST);
+    }
+
+
+    /**
+     * Resets the Labels.
+     */
+    public void resetLabels() {
+        myScoreLabel.setText("Score: " + myGame.getScore());
+        myLinesLabel.setText("Lines: " + myGame.getLines());
+        myLevelLabel.setText("Level: " + myGame.getLevel());
+    }
+
+    /**
+     * Sets up the JPanel for the CENTER region.
+     * 
+     * @param theBoard is Board Panel.
+     */
+    private void setupCenter(final BoardPanel theBoard) { 
+        add(theBoard, BorderLayout.CENTER);
+    }
+
+    /**
+     * Sets up the JPanel for the SOUTH region.
+     */
+    private void setupSouth() {
+        final JComponent southPanel = new JPanel();
+        southPanel.setBackground(Color.MAGENTA);
+        myButtonStart.setBackground(PINK);
+        myButtonStart.setEnabled(true);
+        myButtonStart.setMnemonic(KeyEvent.VK_N);
+        myButtonStart.addActionListener(new ActionButtonListener());
+        myButtonPause.setMnemonic(KeyEvent.VK_P);
+        myButtonPause.setBackground(PINK);
+        myButtonPause.setEnabled(false);
+        myButtonPause.addActionListener(new ActionButtonListener());
+        myButtonHelp.setMnemonic(KeyEvent.VK_H);
+        myButtonHelp.setEnabled(true);
+        myButtonHelp.setBackground(PINK);
+        myButtonHelp.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent theEvent) {
+                UIManager.put("OptionPane.background", PINK);
+                UIManager.put("Panel.background", PINK);
+                UIManager.put("Button.background", Color.MAGENTA);
+                JOptionPane.showMessageDialog(null, "Left - Moves the falling figure to "
+                                + "the left.\nRight - Moves the falling figure to the right."
+                                + "\nDown - Moves the falling figure down."
+                                + "\nSpace - Moves the falling figure all the way down."
+                                + "\nZ - Rotates the falling figure clockwise."
+                                + "\nX - Rotates the falling figure counter-clockwise.",
+                                "Hello Kitty Help Line", JOptionPane.PLAIN_MESSAGE, 
+                                new ImageIcon("Icons/KittyPhone.png"));          
+                requestFocusInWindow();
+            }
+        });
+        final Box southBox = new Box(BoxLayout.LINE_AXIS);
+        southBox.add(myButtonStart);
+        southBox.add(Box.createHorizontalStrut(PADDING));
+        southBox.add(myButtonPause);
+        southBox.add(Box.createHorizontalStrut(PADDING));
+        southPanel.add(southBox);
+        add(southPanel, BorderLayout.SOUTH);
+    }
+
+    /**
+     * Handles the delay for the timer. Reduces it by 100
+     * every time level increases.
+     * 
+     * @param theDelay is Delay for the timer, 100 in this
+     * case.
+     */
+    public void setDelay(final int theDelay) {
+        myDelay -= theDelay;
+        myTimer.setDelay(myDelay);
+    }
+    
+    /**
+     * Resets new High Score if it's greater than
+     * the old one. Resets the label.
+     */
+    public void resetHighScore() {
+        myHighScore.setText("Best: " + myGame.getHighScore());
+    }
+
+    /**
+     * Handles the game over, resets the buttons 
+     * to necessary state, displays the game over
+     * message.
+     */
+    public void handleGameOver() {
+        if (myGameOver) {
+            myButtonPause.setEnabled(false);
+            myButtonStart.setEnabled(true);
+            myGrid.setEnabled(false);
+            resetHighScore();
+            UIManager.put("OptionPane.background", PINK);
+            UIManager.put("Panel.background", PINK);
+            UIManager.put("Button.background", Color.MAGENTA);
+            JOptionPane.showMessageDialog(null, "IT'S GAME OVER\nYou are "
+                            + "not Hello Kitty Tetris Master yet."
+                            + "\nMaybe next time.", "Oh Nooo!!!",
+                            JOptionPane.PLAIN_MESSAGE,
+                            new ImageIcon("Icons/Sorry.png"));   
+            myButtonStart.setText("NEW GAME");
+            myButtonStart.setMnemonic(KeyEvent.VK_N);
+            myTimer.stop();
+            myStartGame = false;
+        } 
+    }
+
+    /**
+     * The update method for the Observer interface.
+     * 
+     * @param theBoard The observable, Board.
+     * @param theInfo Board passes.
+     */
+    public void update(final Observable theBoard, final Object theInfo) {
+        if (theInfo instanceof GameStatus) {
+            myGameOver = ((GameStatus) theInfo).isGameOver();
+            handleGameOver();
+        }
+    }
+
+    /**
+     * Listens for the keys pressed.
+     */
+    private class MyKeyAdapter extends KeyAdapter {
+        /**
+         * Handles a Key Pressed event.
+         * 
+         * @param theEvent The event.
+         */
+        @Override
+        public void keyPressed(final KeyEvent theEvent) {
+            if (!myGameOver && !myPaused && myStartGame) {
+                switch (theEvent.getKeyCode()) {
+                    case KeyEvent.VK_LEFT:
+                        myBoard.left();
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        myBoard.right();
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        myBoard.down();
+                        break;
+                    case KeyEvent.VK_SPACE:
+                        myBoard.drop();
+                        break;
+                    case KeyEvent.VK_Z:
+                        myBoard.rotateCW();
+                        break;  
+                    case KeyEvent.VK_X:
+                        myBoard.rotateCCW();
+                        break;    
+                    default:      
+                }
+            }
+        }
+    } 
+
+    /**
+     * A class that listens for timer events and moves 
+     * the tetris piece.
+     */
+    private class TimerAction implements ActionListener {
+        /** 
+         * Moves the tetris piece if game is not over.
+         * 
+         * @param theEvent the event, ignored.
+         */
+        @Override
+        public void actionPerformed(final ActionEvent theEvent) {
+            if (!myGameOver) {
+                myBoard.step();  
+            }  
+        }
+    }
+    
+    /**
+     * Inner private class ActionButtonListener that implements
+     * ActionListener, necessary for the Action Buttons, such as 
+     * "NEW GAME", "END GAME", "PAUSE", "UNDO", "GRID ON" and
+     * "GRID OFF".
+     */
+    private class  ActionButtonListener implements ActionListener {
+        /**
+         * Method is being chosen depending on which button is 
+         * being triggered, such as "Save As...", "Close Image", 
+         * "Open" or "Undo".
+         * 
+         * @param theEvent is Event being handled.
+         */
+        public void actionPerformed(final ActionEvent theEvent)   {
+            if ("NEW GAME".equals(theEvent.getActionCommand())
+                            || "END GAME".equals(theEvent.getActionCommand())) {
+                if (myStartGame) {
+                    myButtonStart.setText("NEW GAME");
+                    myGrid.setEnabled(false);
+                    myButtonStart.setMnemonic(KeyEvent.VK_N);
+                    resetHighScore();
+                    myButtonPause.setEnabled(false);
+                    myTimer.stop();
+                    myStartGame = false;
+                } else {
+                    
+                    myButtonStart.setText("END GAME");
+                    myButtonStart.setMnemonic(KeyEvent.VK_E);
+                    myButtonPause.setEnabled(true);
+                    myGrid.setEnabled(true);
+                    myStartGame = true;
+                    myGame.startGame();
+                    myDelay = START_DELAY;
+                    myTimer.setDelay(myDelay);
+                    myTimer.start();
+                }
+            } else if ("PAUSE".equals(theEvent.getActionCommand())
+                            || "RESUME".equals(theEvent.getActionCommand())) {
+                if (!myPaused) {
+                    myTimer.stop();
+                    myButtonPause.setText("RESUME");
+                    myButtonPause.setMnemonic(KeyEvent.VK_R);
+                    myPaused = true;
+                    myButtonStart.setEnabled(false);
+                } else {
+                    myTimer.start();
+                    myButtonPause.setText("PAUSE");
+                    myButtonPause.setMnemonic(KeyEvent.VK_P);
+                    myPaused = false;
+                    myButtonStart.setEnabled(true);
+                }
+            } else {
+                if (!myGridOn) {
+                    myGrid.setText("GRID OFF");
+                    myGrid.setMnemonic(KeyEvent.VK_F);
+                    myBoardDataObserver.toggleGrid(true);
+                    myGridOn = true;
+                } else {
+                    myGrid.setText("GRID ON");
+                    myGrid.setMnemonic(KeyEvent.VK_G);
+                    myBoardDataObserver.toggleGrid(false);
+                    myGridOn = false;
+                }
+            }
+            requestFocusInWindow();
+        }
+    }
+}
+
+
+
